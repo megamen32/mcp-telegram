@@ -20,24 +20,48 @@ import { registerStickerTools } from "./stickers.js";
 import { registerStoryTools } from "./stories.js";
 import { registerTranscribeTools } from "./transcribe.js";
 
+const ALLOWED_TOOL_NAMES = new Set([
+  "telegram-status",
+  "telegram-login",
+  "telegram-logout",
+  "telegram-list-chats",
+  "telegram-read-messages",
+  "telegram-get-unread",
+  "telegram-send-message",
+  "telegram-download-media",
+]);
+
+function createAllowlistedServer(server: McpServer): McpServer {
+  return {
+    registerTool(name, schema, handler) {
+      if (!ALLOWED_TOOL_NAMES.has(name)) {
+        return undefined;
+      }
+      return server.registerTool(name, schema, handler);
+    },
+  } as McpServer;
+}
+
 export function registerTools(server: McpServer, telegram: TelegramService) {
-  registerAuthTools(server, telegram);
-  registerMessageTools(server, telegram);
-  registerChatTools(server, telegram);
-  registerMediaTools(server, telegram);
-  registerSendMediaTools(server, telegram);
-  registerContactTools(server, telegram);
-  registerReactionTools(server, telegram);
-  registerTranscribeTools(server, telegram);
-  registerFactCheckTools(server, telegram);
-  registerExtraTools(server, telegram);
-  registerAccountTools(server, telegram);
-  registerBusinessTools(server, telegram);
-  registerFolderTools(server, telegram);
-  registerStickerTools(server, telegram);
-  registerStoryTools(server, telegram);
-  registerBoostTools(server, telegram);
-  registerGroupCallTools(server, telegram);
-  registerStarsTools(server, telegram);
-  registerQuickRepliesTools(server, telegram);
+  const allowlistedServer = createAllowlistedServer(server);
+
+  registerAuthTools(allowlistedServer, telegram);
+  registerMessageTools(allowlistedServer, telegram);
+  registerChatTools(allowlistedServer, telegram);
+  registerMediaTools(allowlistedServer, telegram);
+  registerSendMediaTools(allowlistedServer, telegram);
+  registerContactTools(allowlistedServer, telegram);
+  registerReactionTools(allowlistedServer, telegram);
+  registerTranscribeTools(allowlistedServer, telegram);
+  registerFactCheckTools(allowlistedServer, telegram);
+  registerExtraTools(allowlistedServer, telegram);
+  registerAccountTools(allowlistedServer, telegram);
+  registerBusinessTools(allowlistedServer, telegram);
+  registerFolderTools(allowlistedServer, telegram);
+  registerStickerTools(allowlistedServer, telegram);
+  registerStoryTools(allowlistedServer, telegram);
+  registerBoostTools(allowlistedServer, telegram);
+  registerGroupCallTools(allowlistedServer, telegram);
+  registerStarsTools(allowlistedServer, telegram);
+  registerQuickRepliesTools(allowlistedServer, telegram);
 }

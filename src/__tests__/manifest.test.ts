@@ -4,13 +4,21 @@ import { _resetManifestCache, getToolManifest } from "../manifest.js";
 
 describe("getToolManifest", () => {
   const manifest = getToolManifest();
+  const expectedToolNames = [
+    "telegram-download-media",
+    "telegram-get-unread",
+    "telegram-list-chats",
+    "telegram-login",
+    "telegram-logout",
+    "telegram-read-messages",
+    "telegram-send-message",
+    "telegram-status",
+  ];
 
-  it("registers a substantial catalog (lower-bound, not exact)", () => {
-    // Catalog can grow — assert a floor, not a fixed count, so legitimate
-    // additions don't fail this test. Drift detection lives in the
-    // cloud's `pnpm check-parity` step which is the actual parity gate.
-    assert.ok(manifest.toolCount >= 150, `expected >= 150 tools, got ${manifest.toolCount}`);
+  it("registers exactly the minimal public catalog", () => {
+    assert.strictEqual(manifest.toolCount, expectedToolNames.length);
     assert.strictEqual(manifest.toolCount, manifest.tools.length);
+    assert.deepStrictEqual(manifest.tools.map((tool) => tool.name), expectedToolNames);
   });
 
   it("reports tier breakdown that sums to toolCount", () => {
@@ -43,9 +51,9 @@ describe("getToolManifest", () => {
   });
 
   it("classifies known destructive tools correctly", () => {
-    const deleteMessage = manifest.tools.find((t) => t.name === "telegram-delete-message");
-    assert.ok(deleteMessage, "telegram-delete-message not found");
-    assert.strictEqual(deleteMessage.tier, "destructive");
+    const logout = manifest.tools.find((t) => t.name === "telegram-logout");
+    assert.ok(logout, "telegram-logout not found");
+    assert.strictEqual(logout.tier, "destructive");
   });
 
   it("classifies known write tools correctly", () => {
@@ -54,19 +62,15 @@ describe("getToolManifest", () => {
     assert.strictEqual(sendMessage.tier, "write");
   });
 
-  it("includes opt-in stars tools (env flag forced ON during introspection)", () => {
-    const stars = manifest.tools.find((t) => t.name === "telegram-get-stars-status");
-    assert.ok(stars, "telegram-get-stars-status not found — opt-in flag not forced?");
-  });
-
-  it("includes opt-in group calls tools", () => {
-    const gc = manifest.tools.find((t) => t.name === "telegram-get-group-call");
-    assert.ok(gc, "telegram-get-group-call not found");
-  });
-
-  it("includes opt-in quick replies tools", () => {
-    const qr = manifest.tools.find((t) => t.name === "telegram-get-quick-replies");
-    assert.ok(qr, "telegram-get-quick-replies not found");
+  it("does not expose tools outside the public allowlist", () => {
+    for (const name of [
+      "telegram-delete-message",
+      "telegram-get-stars-status",
+      "telegram-get-group-call",
+      "telegram-get-quick-replies",
+    ]) {
+      assert.ok(!manifest.tools.some((tool) => tool.name === name), `${name} should be private`);
+    }
   });
 
   it("does not leak forced env flags after invocation", () => {
