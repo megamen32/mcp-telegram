@@ -33,3 +33,4 @@ coverage/
 
 # Output of `mcp-telegram-manifest` CLI
 manifest.json
+/.runtime/
